@@ -1,0 +1,383 @@
+#include "ns3/applications-module.h"
+#include "ns3/core-module.h"
+#include "ns3/csma-module.h"
+#include "ns3/internet-module.h"
+#include "ns3/mobility-module.h"
+#include "ns3/network-module.h"
+#include "ns3/point-to-point-module.h"
+#include "ns3/ssid.h"
+#include "ns3/yans-wifi-helper.h"
+
+using namespace ns3;
+
+NS_LOG_COMPONENT_DEFINE("--");
+
+int main (int argc, char *argv[])
+{
+  
+ 
+   // bool verbose = true;
+    uint32_t nCsma = 1;
+    uint32_t nWifi = 10;
+    bool tracing = false;
+     bool enableRtsCts = false;
+    std::string studentId= "";
+    CommandLine cmd(_FILE_);
+    cmd.AddValue ("studentId", "matricola", studentId);
+    cmd.AddValue("nCsma", "Number of \"extra\" CSMA nodes/devices", nCsma);
+    cmd.AddValue("nWifi", "Number of wifi STA devices", nWifi);
+    cmd.AddValue("tracing", "Enable pcap tracing", tracing);
+    cmd.AddValue("enableRtsCts", "Enable RTS/CTS", enableRtsCts);
+    
+
+    cmd.Parse (argc, argv);
+
+    if (studentId.empty ()) {
+        std::cout << "matricola mancante" << std::endl;
+        return 1; 
+    }
+    if (enableRtsCts){
+        Config::SetDefault("ns3::WiFiRemoteStationManager::RtsCtsThreshold",StringValue("0"));
+    }
+
+    LogComponentEnable("UdpEchoClientApplication", LOG_LEVEL_INFO);
+    LogComponentEnable("UdpEchoServerApplication", LOG_LEVEL_INFO);
+    
+    // CREAZIONE NODI P2P
+    // creo p2p 
+    NodeContainer p2pNodesA;
+    p2pNodesA.Create(2);
+
+    NodeContainer p2pNodesB;
+    p2pNodesB.Add(p2pNodesA.Get(1));
+    p2pNodesB.Create(1);
+
+    NodeContainer p2pNodesC;
+    p2pNodesC.Add(p2pNodesA.Get(1));
+    p2pNodesC.Create(1);
+
+    // sia p2p B che p2p C sono collegati a nodo (1) di A
+    NodeContainer p2pNodesD;
+    p2pNodesD.Add(p2pNodesB.Get(1)); 
+    p2pNodesD.Create(1);
+
+    NodeContainer p2pNodesE;
+    p2pNodesE.Add(p2pNodesD.Get(1)); //????? come li conta 
+    p2pNodesE.Create(1);
+
+    NodeContainer p2pNodesF;
+    p2pNodesF.Add(p2pNodesD.Get(1)); //????? come li conta 
+    p2pNodesF.Create(1);
+
+    NodeContainer p2pNodesG;
+    p2pNodesG.Add(p2pNodesF.Get(1)); //????? come li conta 
+    p2pNodesG.Create(1);
+
+    NodeContainer p2pNodesH;
+    p2pNodesH.Add(p2pNodesF.Get(1)); //????? come li conta 
+    p2pNodesH.Create(1);
+
+    
+
+   
+
+    NodeContainer csmaNodes;
+    csmaNodes.Add(p2pNodesC.Get(1));
+    csmaNodes.Create(1);
+
+    NodeContainer wifiStaNodes;
+    wifiStaNodes.Create(nWifi);
+
+    NodeContainer p2pNodesP;
+    p2pNodesP.Add(p2pNodesF.Get(1));  
+    p2pNodesP.Add(wifiStaNodes.Get(0));
+   
+
+    //CONNETTO NODI TRA LORO (CREO CHANNEL)
+
+    PointToPointHelper pointToPointA;
+    pointToPointA.SetDeviceAttribute("DataRate", StringValue("100Mbps"));
+    pointToPointA.SetChannelAttribute("Delay", StringValue("200ms"));
+
+    PointToPointHelper pointToPointB;
+    pointToPointB.SetDeviceAttribute("DataRate", StringValue("100Mbps"));
+    pointToPointB.SetChannelAttribute("Delay", StringValue("200ms"));
+
+    PointToPointHelper pointToPointC;
+    pointToPointC.SetDeviceAttribute("DataRate", StringValue("100Mbps"));
+    pointToPointC.SetChannelAttribute("Delay", StringValue("20ms"));
+
+    PointToPointHelper pointToPointD;
+    pointToPointD.SetDeviceAttribute("DataRate", StringValue("100Mbps"));
+    pointToPointD.SetChannelAttribute("Delay", StringValue("20ms"));
+
+    PointToPointHelper pointToPointE;
+    pointToPointE.SetDeviceAttribute("DataRate", StringValue("5Mbps"));
+    pointToPointE.SetChannelAttribute("Delay", StringValue("20ms"));
+
+    PointToPointHelper pointToPointF;
+    pointToPointF.SetDeviceAttribute("DataRate", StringValue("5Mbps"));
+    pointToPointF.SetChannelAttribute("Delay", StringValue("20ms"));
+
+     PointToPointHelper pointToPointG;
+    pointToPointG.SetDeviceAttribute("DataRate", StringValue("5Mbps"));
+    pointToPointG.SetChannelAttribute("Delay", StringValue("20ms"));
+
+     PointToPointHelper pointToPointH;
+    pointToPointH.SetDeviceAttribute("DataRate", StringValue("5Mbps"));
+    pointToPointH.SetChannelAttribute("Delay", StringValue("20ms"));
+
+    CsmaHelper csma; 
+    csma.SetChannelAttribute("DataRate", StringValue("5Mbps"));
+    csma.SetChannelAttribute("Delay", StringValue("20ms"));
+
+    PointToPointHelper pointToPointP;
+    pointToPointP.SetDeviceAttribute("DataRate", StringValue("100Mbps"));
+    pointToPointP.SetChannelAttribute("Delay", StringValue("20ms"));
+
+
+
+    //CREO INTERFACCE VERE E PROPRIE
+
+    NetDeviceContainer devicesA;
+    devicesA = pointToPointA.Install(p2pNodesA); 
+
+    NetDeviceContainer devicesB;
+    devicesB = pointToPointB.Install(p2pNodesB); 
+
+    NetDeviceContainer devicesC;
+    devicesC = pointToPointC.Install(p2pNodesC); 
+
+    NetDeviceContainer devicesD;
+    devicesD = pointToPointD.Install(p2pNodesD); 
+
+    NetDeviceContainer devicesE;
+    devicesE = pointToPointE.Install(p2pNodesE); 
+
+    NetDeviceContainer devicesF;
+    devicesF = pointToPointF.Install(p2pNodesF); 
+
+    NetDeviceContainer devicesG;
+    devicesG = pointToPointG.Install(p2pNodesG); 
+
+    NetDeviceContainer devicesH;
+    devicesH = pointToPointH.Install(p2pNodesH); 
+
+    NetDeviceContainer devicesCSMA;
+    devicesCSMA = csma.Install(csmaNodes);
+
+    NetDeviceContainer devicesP;
+    devicesP = pointToPointP.Install(p2pNodesP); 
+
+
+
+    //INSTALLO STACK INTERNET SOPRA
+    InternetStackHelper stack;
+    /*
+    stack.Install(p2pNodesA.Get(0));
+    stack.Install(p2pNodesA.Get(1));
+
+    stack.Install(p2pNodesB.Get(0));
+    stack.Install(p2pNodesC.Get(1));
+    stack.Install(csmaNodes.Get(1));
+    stack.Install(p2pNodesD.Get(1));
+    stack.Install(p2pNodesE.Get(1));
+    stack.Install(p2pNodesF.Get(1));
+    stack.Install(p2pNodesG.Get(1));
+    stack.Install(p2pNodesH.Get(1));
+    stack.Install(p2pNodesP.Get(1));
+    */
+   stack.Install(p2pNodesA);
+    
+
+    stack.Install(p2pNodesB);
+    stack.Install(p2pNodesC);
+    stack.Install(csmaNodes);
+    stack.Install(p2pNodesD);
+    stack.Install(p2pNodesE);
+    stack.Install(p2pNodesF);
+    stack.Install(p2pNodesG);
+    stack.Install(p2pNodesH);
+    stack.Install(p2pNodesP);
+
+    //ASSEGNO INDIRIZZI IP 
+    Ipv4AddressHelper address;
+
+    address.SetBase("10.1.7.0", "255.255.255.252");
+    Ipv4InterfaceContainer p2pInterfacesB;
+    p2pInterfacesB = address.Assign(devicesB);
+
+    address.SetBase("10.1.6.0", "255.255.255.252");
+    Ipv4InterfaceContainer p2pInterfacesA;
+    p2pInterfacesA = address.Assign(devicesA);
+    
+    address.SetBase("10.1.5.0", "255.255.255.252");
+    Ipv4InterfaceContainer p2pInterfacesC;
+    p2pInterfacesC = address.Assign(devicesC);
+
+    address.SetBase("10.1.4.0", "255.255.255.252");
+    Ipv4InterfaceContainer InterfacesCSMA;
+    InterfacesCSMA = address.Assign(devicesCSMA);
+
+    address.SetBase("10.1.3.0", "255.255.255.252");
+    Ipv4InterfaceContainer p2pInterfacesD;
+    p2pInterfacesD = address.Assign(devicesD);
+
+    address.SetBase("10.1.2.0", "255.255.255.252");
+    Ipv4InterfaceContainer p2pInterfacesE;
+    p2pInterfacesE = address.Assign(devicesE);
+
+    address.SetBase("10.1.1.0", "255.255.255.252");
+    Ipv4InterfaceContainer p2pInterfacesF;
+    p2pInterfacesF = address.Assign(devicesF);
+
+     address.SetBase("10.1.9.0", "255.255.255.252");
+    Ipv4InterfaceContainer p2pInterfacesG;
+    p2pInterfacesG = address.Assign(devicesG);
+
+      address.SetBase("10.1.10.0", "255.255.255.252");
+    Ipv4InterfaceContainer p2pInterfacesH;
+    p2pInterfacesH = address.Assign(devicesH);
+
+       address.SetBase("10.1.11.0", "255.255.255.252");
+    Ipv4InterfaceContainer p2pInterfacesP;
+    p2pInterfacesP = address.Assign(devicesP);
+
+    // creazione wifi
+
+    
+   
+
+    YansWifiChannelHelper channel = YansWifiChannelHelper::Default(); // HELPER PER CANALE 
+    YansWifiPhyHelper phy;
+    phy.SetChannel(channel.Create()); // STRATO FISICO 
+
+    WifiMacHelper mac;
+    WifiHelper wifi;
+
+    wifi.SetStandard(WIFI_STANDARD_80211g);
+    wifi.SetRemoteStationManager("ns3::AarfWifiManager");
+
+    NetDeviceContainer adhocDevices;
+    mac.SetType("ns3::ApWifiMac");
+    adhocDevices = wifi.Install(phy,mac,wifiStaNodes);
+
+    MobilityHelper mobility; 
+    mobility.SetPositionAllocator("ns3::GridPositionAllocator", //???????????
+                                  "MinX", 
+                                  DoubleValue(0.0),
+                                  "MinY",
+                                  DoubleValue(0.0),
+                                  "DeltaX",
+                                  DoubleValue(5.0),
+                                  "DeltaY",
+                                  DoubleValue(10.0),
+                                  "GridWidth",
+                                  UintegerValue(3),
+                                  "LayoutType",
+                                  StringValue("RowFirst"));
+    mobility.Install(wifiStaNodes);
+
+    mobility.SetMobilityModel("ns3::ConstantPositionMobilityModel");
+
+    stack.Install(wifiStaNodes);
+
+    address.SetBase("10.1.8.0", "255.255.255.240");
+    address.Assign(adhocDevices);
+
+    // ---------
+
+    //bulk sender
+    int port = 50000;
+    BulkSendHelper source("ns3::TcpSocketFactory", InetSocketAddress (p2pInterfacesA.GetAddress(0), port));
+    // Set the amount of data to send in bytes. Zero is unlimited.
+    source.SetAttribute("MaxBytes",UintegerValue(1345000000));//controlla
+    ApplicationContainer sourceApps = source.Install (wifiStaNodes.Get(6)); 
+    sourceApps.Start (Seconds(0.94)); sourceApps. Stop (Seconds (10.0));
+
+    //packet sink 
+
+   
+    Address hubLocalAddress (InetSocketAddress (Ipv4Address::GetAny(), port)); // errore
+    PacketSinkHelper packetSinkHelper ("ns3::TcpSocketFactory", hubLocalAddress) ;
+    ApplicationContainer hubApp = packetSinkHelper.Install(p2pNodesA.Get(0));
+
+     
+
+    //2
+
+    port = 30000;
+    BulkSendHelper source2("ns3::TcpSocketFactory", InetSocketAddress (p2pInterfacesB.GetAddress(0), port));
+    // Set the amount of data to send in bytes. Zero is unlimited.
+    source2.SetAttribute("MaxBytes",StringValue("1274000000"));
+    ApplicationContainer sourceApps2 = source2.Install (wifiStaNodes.Get(5));
+    sourceApps2.Start (Seconds(3.83)); sourceApps2.Stop (Seconds (10.0));
+
+    //packet sink 
+
+    Address hubLocalAddress2 (InetSocketAddress (Ipv4Address::GetAny(), port));
+    PacketSinkHelper packetSinkHelper2 ("ns3::TcpSocketFactory", hubLocalAddress2) ;
+    ApplicationContainer hubApp2 = packetSinkHelper2.Install(p2pNodesB.Get(0));
+
+    //3
+
+    
+    //bulk sender
+    port = 10000;
+    BulkSendHelper source3("ns3::TcpSocketFactory", InetSocketAddress (p2pInterfacesA.GetAddress(0), port));
+    // Set the amount of data to send in bytes. Zero is unlimited.
+    source3.SetAttribute("MaxBytes",StringValue("1345000000"));
+    ApplicationContainer sourceApps3 = source3.Install (p2pNodesH.Get(1));
+    sourceApps3.Start (Seconds(0.94)); sourceApps3. Stop (Seconds (10.0));
+
+    //packet sink 
+
+   
+    Address hubLocalAddress3 (InetSocketAddress (Ipv4Address::GetAny(), port));
+    PacketSinkHelper packetSinkHelper3 ("ns3::TcpSocketFactory", hubLocalAddress3) ;
+    ApplicationContainer hubApp3 = packetSinkHelper3.Install(p2pNodesA.Get(0));
+
+     
+//echoClient
+
+    UdpEchoServerHelper echoServer(1234); 
+
+    ApplicationContainer serverApps = echoServer.Install(csmaNodes.Get(1));
+
+    serverApps.Start(Seconds(0));
+    serverApps.Stop(Seconds(10.0));
+    
+
+    UdpEchoClientHelper echoClient(InterfacesCSMA.GetAddress(1) ,1234);
+    echoClient.SetAttribute("MaxPackets", UintegerValue(250)); //massimo n. pacchetti
+    echoClient.SetAttribute("Interval", TimeValue(Seconds(0.02))); // periodicità con cui invio pkt
+    echoClient.SetAttribute("PacketSize", UintegerValue(1121)); //size 
+    std::string dati = "Nomi cognomi matricole";
+   
+
+    ApplicationContainer clientApps = echoClient.Install(wifiStaNodes.Get(8));
+
+    echoClient.SetFill(clientApps.Get(0),dati);
+    //echoClient.SetAttribute("PacketSize",UintegerValue(dati.size()));
+
+    clientApps.Start(Seconds(0));
+    clientApps.Stop(Seconds(10.0));
+
+     Simulator::Stop(Seconds(10.0));
+
+    if (tracing) 
+    {
+       
+        pointToPointA.EnablePcap("task", devicesA.Get(1), true); 
+        pointToPointC.EnablePcap("task", devicesC.Get(1), true);
+        pointToPointD.EnablePcap("task", devicesD.Get(1), true);
+        pointToPointE. EnablePcap ("task", devicesE.Get(1), true);
+        phy.EnablePcap ("task", adhocDevices.Get(0), true);
+
+       
+    }
+
+    Simulator::Run();
+    Simulator::Destroy();
+    return 0;
+}
